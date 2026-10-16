@@ -17,6 +17,12 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## GitHub Pages
+
+The `main` branch automatically builds and deploys through GitHub Actions. After selecting **GitHub Actions** under the repository's **Settings → Pages → Source**, the site is available at:
+
+[https://hifzh4n.github.io/hdstatus/](https://hifzh4n.github.io/hdstatus/)
+
 ## Verify the project
 
 ```powershell
