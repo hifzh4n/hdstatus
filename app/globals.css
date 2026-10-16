@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #070b12;
+  color: #e7edf7;
+  font-family: Arial, Helvetica, sans-serif;
+}
+button, input, select, textarea { font: inherit; }
+::selection { background: #5eead4; color: #071013; }
+
+@keyframes pulse-soft { 50% { opacity: .55; } }
+.pulse-soft { animation: pulse-soft 1.5s ease-in-out infinite; }
