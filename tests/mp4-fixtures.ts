@@ -43,11 +43,11 @@ function videoTrak(opts: FixtureOptions = {}, id = 1): Uint8Array {
 function audioTrak(id = 2): Uint8Array { return box("trak", tkhd(0, 0, 0, 0, id), box("mdia", mdhd(), hdlr("soun"), box("minf", box("stbl", box("stsd", full(), be32(0)), stts(), stsz())))); }
 function mvhd(): Uint8Array { return box("mvhd", full(), be32(0), be32(0), be32(1000), be32(100_000), new Uint8Array(80)); }
 
-export interface FixtureOptions { width?: number; height?: number; rotation?: 0 | 90 | 180 | 270; tkhdVersion?: 0 | 1; codec?: string; multipleVideo?: boolean; fragmented?: boolean; encrypted?: boolean; extendedMdat?: boolean; zeroMdat?: boolean }
+export interface FixtureOptions { width?: number; height?: number; rotation?: 0 | 90 | 180 | 270; tkhdVersion?: 0 | 1; codec?: string; multipleVideo?: boolean; fragmented?: boolean; encrypted?: boolean; extendedMdat?: boolean; zeroMdat?: boolean; appleMetadata?: boolean }
 
 export function makeMp4(opts: FixtureOptions = {}): Uint8Array {
   const ftyp = box("ftyp", text("isom"), be32(0), text("isom"), text("mp42"));
-  const moov = box("moov", mvhd(), videoTrak(opts), audioTrak(), ...(opts.multipleVideo ? [videoTrak(opts, 3)] : []), ...(opts.fragmented ? [box("mvex", new Uint8Array(8))] : []));
+  const moov = box("moov", mvhd(), videoTrak(opts), audioTrak(), ...(opts.multipleVideo ? [videoTrak(opts, 3)] : []), ...(opts.fragmented ? [box("mvex", new Uint8Array(8))] : []), ...(opts.appleMetadata ? [box("udta", box("©xyz", Uint8Array.of(0, 0, 0, 1)))] : []));
   const payload = Uint8Array.from({ length: 1024 }, (_, i) => i % 251);
   const mdat = opts.zeroMdat ? zeroBox("mdat", payload) : opts.extendedMdat ? extendedBox("mdat", payload) : box("mdat", payload);
   return concat(ftyp, moov, ...(opts.fragmented ? [box("moof", new Uint8Array(8))] : []), mdat);

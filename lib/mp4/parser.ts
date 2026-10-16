@@ -1,7 +1,10 @@
 import { ascii, fixed1616, i32, u16, u32, u64 } from "./binary";
 import { Mp4Error, type InspectionResult, type Mp4Box, type RandomAccessSource, type TrackInfo } from "./types";
 
-const CONTAINERS = new Set(["moov", "trak", "mdia", "minf", "stbl", "edts", "dinf", "udta", "meta", "ilst"]);
+// Only descend into boxes required to locate and validate media tracks.
+// QuickTime udta/meta/ilst atoms may use Apple-specific non-ASCII FourCCs
+// (for example ©xyz), and none of them are needed to patch tkhd dimensions.
+const CONTAINERS = new Set(["moov", "trak", "mdia", "minf", "stbl", "edts", "dinf"]);
 const MAX_BOXES = 100_000;
 const MAX_DEPTH = 16;
 
@@ -39,10 +42,7 @@ async function scan(source: RandomAccessSource, start: number, end: number, pare
     const path = `${parentPath}/${type}`;
     const box: Mp4Box = { type, start: position, size, headerSize, dataStart: position + headerSize, end: position + size, path, children: [] };
     if (CONTAINERS.has(type)) {
-      let childStart = box.dataStart;
-      if (type === "meta") childStart += 4;
-      if (childStart > box.end) throw new Mp4Error(`Truncated ${type} box`, "TRUNCATED");
-      box.children = await scan(source, childStart, box.end, path, depth + 1, counter);
+      box.children = await scan(source, box.dataStart, box.end, path, depth + 1, counter);
     }
     boxes.push(box);
     position += size;

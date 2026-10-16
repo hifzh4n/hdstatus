@@ -36,6 +36,11 @@ describe("MP4 inspection", () => {
     expect((await inspectMp4(new BufferSource(makeMp4({ zeroMdat: true })))).mdatRanges).toHaveLength(1);
   });
 
+  it("accepts Apple QuickTime metadata with non-ASCII atom names", async () => {
+    const result = await inspectMp4(new BufferSource(makeMp4({ appleMetadata: true })));
+    expect(selectVideoTrack(result).codec).toBe("hvc1");
+  });
+
   it("finds tracks by handler and rejects ambiguous automatic selection", async () => {
     const result = await inspectMp4(new BufferSource(makeMp4({ multipleVideo: true })));
     expect(result.tracks.filter((t) => t.handler === "vide")).toHaveLength(2);
