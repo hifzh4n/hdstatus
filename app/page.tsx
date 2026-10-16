@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { CheckCircle2, Download, FileVideo, LoaderCircle, RotateCcw, Upload } from "lucide-react";
 import { Button, Card } from "@/components/ui";
+import { identifySupportedContainer } from "@/lib/input-format";
 import { hashBlobRanges } from "@/lib/mp4/hash";
 import { inspectMp4 } from "@/lib/mp4/parser";
 import { patchDisplayDimensions } from "@/lib/mp4/patch";
@@ -37,9 +38,8 @@ export default function Home() {
     setProgress(0.05);
 
     try {
-      if (!candidate.name.toLowerCase().endsWith(".mp4") && candidate.type !== "video/mp4" && candidate.type !== "application/octet-stream") {
-        throw new Error("This tool accepts MP4 video files only.");
-      }
+      const format = identifySupportedContainer(candidate);
+      if (!format) throw new Error("This tool accepts MP4, MOV, and M4V video files.");
 
       const inspection = await inspectMp4(new BlobSource(candidate));
       setProgress(0.2);
@@ -56,7 +56,7 @@ export default function Home() {
       const originalWidth = rotated ? codedHeight : codedWidth;
       const originalHeight = rotated ? codedWidth : codedHeight;
       const target = automaticAdvertisedSize(originalWidth, originalHeight);
-      const patched = await patchDisplayDimensions(candidate, inspection, target.width, target.height);
+      const patched = await patchDisplayDimensions(candidate, inspection, target.width, target.height, format.mimeType);
       const ranges = inspection.mdatRanges.map(({ start, end }) => ({ start, end }));
       const originalHash = await hashBlobRanges(candidate, ranges, (value) => setProgress(0.2 + value * 0.35));
       const outputHash = await hashBlobRanges(patched.blob, ranges, (value) => setProgress(0.55 + value * 0.4));
@@ -64,7 +64,7 @@ export default function Home() {
 
       setResult({
         blob: patched.blob,
-        name: `${candidate.name.replace(/\.mp4$/i, "")}-spoofed-${target.width}x${target.height}.mp4`,
+        name: `${candidate.name.replace(/\.(mp4|mov|m4v)$/i, "")}-spoofed-${target.width}x${target.height}.${format.extension}`,
         originalWidth,
         originalHeight,
         targetWidth: target.width,
@@ -116,12 +116,12 @@ export default function Home() {
                 onDrop={(event) => { event.preventDefault(); const dropped = event.dataTransfer.files[0]; if (dropped) void spoof(dropped); }}
               >
                 <Upload className="mb-4 text-teal-300" size={30} />
-                <span className="font-semibold">Choose MP4 document</span>
+                <span className="font-semibold">Choose MP4 or MOV document</span>
                 <span className="mt-2 text-xs text-slate-500">or drag and drop it here</span>
             </button>
           )}
 
-          <input ref={inputRef} className="hidden" type="file" accept=".mp4,video/mp4,application/octet-stream" onChange={(event) => { const selected = event.target.files?.[0]; if (selected) void spoof(selected); }} />
+          <input ref={inputRef} className="hidden" type="file" accept=".mp4,.mov,.m4v,video/mp4,video/quicktime,application/octet-stream" onChange={(event) => { const selected = event.target.files?.[0]; if (selected) void spoof(selected); }} />
 
           {file && busy && (
             <div className="py-10 text-center">
@@ -151,7 +151,7 @@ export default function Home() {
           )}
 
           {file && !busy && error && (
-            <div className="py-5 text-center"><div className="font-semibold text-red-300">Could not process this file</div><p className="mt-2 text-sm text-slate-400">{error}</p><Button className="mt-5" variant="secondary" onClick={reset}>Choose another MP4</Button></div>
+              <div className="py-5 text-center"><div className="font-semibold text-red-300">Could not process this file</div><p className="mt-2 text-sm text-slate-400">{error}</p><Button className="mt-5" variant="secondary" onClick={reset}>Choose another video</Button></div>
           )}
         </Card>
 

@@ -9,7 +9,7 @@ export function selectVideoTrack(inspection: InspectionResult): TrackInfo {
   return videos[0];
 }
 
-export async function patchDisplayDimensions(file: File, inspection: InspectionResult, targetWidth: number, targetHeight: number): Promise<PatchResult> {
+export async function patchDisplayDimensions(file: File, inspection: InspectionResult, targetWidth: number, targetHeight: number, outputMimeType = "video/mp4"): Promise<PatchResult> {
   if (inspection.fragmented) throw new Error("Fragmented MP4 files are intentionally rejected");
   if (inspection.encrypted) throw new Error("Encrypted/protected MP4 files are intentionally rejected");
   if (!Number.isInteger(targetWidth) || !Number.isInteger(targetHeight) || targetWidth <= 0 || targetHeight <= 0 || targetWidth > 16384 || targetHeight > 16384) {
@@ -28,7 +28,7 @@ export async function patchDisplayDimensions(file: File, inspection: InspectionR
   ];
   const blob = new Blob([
     file.slice(0, offsets[0]), writeU32(patches[0].after), writeU32(patches[1].after), file.slice(offsets[1] + 4),
-  ], { type: "video/mp4" });
+  ], { type: outputMimeType });
   if (blob.size !== file.size) throw new Error("Safety check failed: output size changed");
   return { blob, patches, storedWidth, storedHeight };
 }

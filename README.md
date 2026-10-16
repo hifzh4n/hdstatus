@@ -2,11 +2,11 @@
 
 A small browser tool with one job:
 
-1. Upload an MP4 file.
+1. Upload an MP4, MOV, or M4V file (including iPhone QuickTime video).
 2. The app automatically derives spoofed display dimensions from its original aspect ratio.
 3. Download the metadata-spoofed MP4.
 
-The original coded resolution remains unchanged. The app fits the visible aspect ratio inside a 640-pixel long edge—for example, 3840×2160 becomes an advertised 640×360 and 2160×3840 becomes 360×640—then changes only the video track's `tkhd` display width and height. It does not decode or re-encode video or audio. Before exposing the download, it computes SHA-256 over every `mdat` box in the input and output and requires the hashes to match.
+The original coded resolution and container type remain unchanged. An iPhone `.MOV` is downloaded as `.MOV`; it is not renamed or converted to MP4. The app fits the visible aspect ratio inside a 640-pixel long edge—for example, 3840×2160 becomes an advertised 640×360 and 2160×3840 becomes 360×640—then changes only the video track's `tkhd` display width and height. It does not decode or re-encode video or audio. Before exposing the download, it computes SHA-256 over every `mdat` box in the input and output and requires the hashes to match.
 
 ## Run locally
 
